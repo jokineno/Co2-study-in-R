@@ -1,0 +1,971 @@
+---
+title: "Reaktor: Summer Job Application by OJ"
+author: "Olli 'OJ' Jokinen"
+date: "Feb/2019"
+output: github_document
+---
+
+![On my way to scoring a summer job at Reaktor!](https://www.databusiness.fi/content/uploads/2017/06/22-380x380.png)
+
+
+
+TASKS 1,3,4,5
+=========
+
+####The questions I'm going to answer
+- What is the long term trend of temperature like?
+- How are the long term trend of human caused gas emissions like?
+- How much Carbon Dioxide drives Global Warming?
+- Are there any interaction or correlation between these factors?
+- How do the future looks like of temperature and gas emissions? 
+- What is the relationship of GDP and Total Emissions like? 
+- What are is the sketch of Interface like? 
+- What the models do and don't take into account?
+
+####References
+- IPCC report showed that "Climate-related risks for natural and human systems are higher for global warming of 1.5Celcius than at present, but lower than at 2Celcius (high confidence)."
+- The global goal is to reduce emissions 45% before 2030 and carbon frootprint should be negative after 2050
+
+######Data sources used in the project:  World Bank (R's API package), Berkeley Earth (Web) and NASA (Web). 
+
+
+The Storytell begins
+=================
+![Emissions affecting on Global Warming?](https://thehill.com/sites/default/files/styles/thumb_small_article/public/blogs/global_warming.jpg?itok=PDGbMdov.png)
+
+
+###Getting Gas Emission Data
+
+
+#####Install World Bank API packages
+```{r}
+#install.packages('WDI')
+```
+
+
+
+- I use World Bank API to search for indicators of Top3 Emissions: Carbon, Methane and Nitous Oxide and Other Emissions
+```{r}
+WDI::WDIsearch('co2')
+#Methane, CH4: 
+# [11,] "Methane emissions (kt of CO2 equivalent)"   
+# INDICATOR: "EN.ATM.METH.KT.CE"   
+
+#Carbon, CO2 
+# [24,] "CO2 emissions (kt)"   
+#INDICATOR: "EN.ATM.CO2E.KT"   
+
+#Nitrous oxide, N2O
+WDI::WDIsearch('nitrous')
+#[2,] "Nitrous oxide emissions (thousand metric tons of CO2 equivalent)"        
+#INDICATOR: "EN.ATM.NOXE.KT.CE"   
+
+WDI::WDI(country="WLD",indicator = "EN.ATM.CO2E.KT")
+# -> only data from 2005-2011, I will use another API of WB, wbstats
+
+WDI::WDIsearch('emissions')
+#[24,] "Total greenhouse gas emissions (kt of CO2 equivalent)"                                                                            
+#INDICATOR: [24,] "EN.ATM.GHGT.KT.CE"  
+
+```
+- WDI emission data contains just few 7 rows of data.
+- I'll try "wbstats" - another World Bank API package. 
+
+```{r}
+library(wbstats)
+```
+
+- I will download emission data from wbstats. I won't remove any missing values at this point. 
+
+```{r}
+co2 <- wb(country= "WLD", indicator = "EN.ATM.CO2E.KT", removeNA = F) #co2
+meth <- wb(country = "WLD", indicator = "EN.ATM.METH.KT.CE", removeNA = F) #ch4
+nitoxi <- wb(country = "WLD", indicator = "EN.ATM.NOXE.KT.CE", removeNA = F) #n2o
+total <- wb(country= "WLD", indicator = "EN.ATM.GHGT.KT.CE", removeNA = F)
+pop <- wb(country= "WLD", indicator = "SP.POP.TOTL", removeNA = F) #population
+gdp <- wb(country= "WLD", indicator = "NY.GDP.MKTP.CD", removeNA = F) #gdp
+
+dim(co2)
+```
+
+#####Quick OverView on Emission data. 
+```{r}
+head(co2)
+head(meth)
+head(nitoxi)
+head(total)
+```
+- Time-Series data is from either 1960 or 1970 to present. That's fine. 
+- There are few extra columns. "Date" and "Value" are the most important.
+
+#####Deleting extra columns and leave "Date" and "Value"
+```{r}
+co2 <- co2[-c(1,4:7)]
+meth <- meth[-c(1,4:7)]
+nitoxi <- nitoxi[-c(1,4:7)]
+total <- total[-c(1,4:7)]
+gdp <- gdp[-c(1,4:7)]
+pop <- pop[-c(1,4:7)]
+
+
+head(co2)
+```
+- All good. 
+
+#####Rename the columns
+```{r}
+colnames(co2) <- c("Year","Co2")
+colnames(meth) <- c("Year","CH4") 
+colnames(nitoxi) <- c("Year","N2O")
+colnames(total) <- c("Year","Total")
+colnames(gdp) <- c("Year","Value")
+colnames(pop) <- c("Year","Value")
+head(co2)
+```
+- All good.
+
+
+
+
+#####Create a data frame based on emission data. 
+```{r}
+last <- co2$Year[1] #present year
+first <- co2$Year[nrow(co2)] #Year 1960
+
+```
+- "last" and "first" indexes to build an automated data pipeline. 
+
+#####Create a data frame
+```{r}
+gasemi <- data.frame(
+  Year = last:first,
+  co2 = co2$Co2,
+  meth = meth$CH4,
+  nitoxi = nitoxi$N2O,
+  Total = total$Total
+)
+
+head(gasemi)
+
+```
+- All good. 
+
+#####Add one more column "Other" gasses. 
+```{r}
+gasemi$other <- gasemi$Total-gasemi$nitoxi-gasemi$meth - gasemi$co2
+gasemi$other
+colnames(gasemi)
+```
+
+- Based on IPCC report: 2010 is the reference level for the future climate change goals. 
+
+#####Year 2010 emission levels. 
+```{r}
+gasses2010 <- gasemi[gasemi$Year==2010,]
+gasses2010
+```
+
+#####Deleting "Year" and "Total" columns
+```{r}
+gasses2010 <- gasses2010[-c(1,5)]
+```
+
+
+
+2010 emission shares
+========
+
+#####Building a pie chart to get a clue of 2010 shares of emissions. 
+```{r}
+library(ggplot2)
+
+# Pie Chart of Emissions
+slices <- gasses2010
+lbls <- c("CO2", "CH4", "N2O", "Other")
+pct <- round(slices/sum(slices)*100)
+lbls <- paste(lbls,pct) #add percents to labels
+lbls <- paste(lbls, "%",sep="") #add % to labels
+pie(as.integer(slices), lbls, col= c("lightblue","pink","lightgreen","grey"),main="Pie Chart of Emissions(%), Year 2010")
+
+
+```
+- Carbon Dioxide emissions forms the greatest (66%) part of emissions in 2010. 
+
+
+
+#####Long Term Trend: Co2
+```{r}
+gasplot <- ggplot(gasemi, aes(x = gasemi$Year, y = gasemi$co2),color="Carbon Dioxide") + geom_point(color="darkgreen") + geom_smooth(color="lightgreen", method=loess) + xlim(1960,2020) +  ylim(0, 4e+7) + xlab("Year") + ylab("Gas emissions (kt)")
+gasplot
+
+```
+- There certainly is an upward trend in co2 emissions. 
+
+
+#####Long Term Trend: Co2 + CH4 + N20 + Other
+```{r}
+gasplot2 <- gasplot + geom_point(data=gasemi, aes(x=gasemi$Year, y = gasemi$meth), color="darkblue") + geom_smooth(data = gasemi, aes(x=gasemi$Year, y = gasemi$meth) ,method=loess, color="lightblue") + geom_point(data=gasemi, aes(x=gasemi$Year, y=gasemi$nitoxi), color="orange") + geom_smooth(data=gasemi, aes(x=gasemi$Year, y = gasemi$nitoxi), method=loess, color="yellow") + geom_point(data=gasemi, aes(x=gasemi$Year, y=gasemi$other), color="purple") + geom_smooth(data=gasemi, aes(x=gasemi$Year, y = gasemi$other), method=loess, color="purple", size=0.1)
+gasplot2
+```
+
+- The growth of Carbon Dioxide emissions is the steepest
+- The amount of CO2 emissions are the highest. 
+
+
+Getting More Co2 Data
+=========================
+
+#####Let's see how total amount of Carbon Dioxide in atmosphere has changed in 50 years. Data source: Nasa
+```{r}
+co2Nasa <- read.table("ftp://aftp.cmdl.noaa.gov/products/trends/co2/co2_mm_mlo.txt", comment.char = "#")
+head(co2Nasa)
+```
+
+- I need only columns V1 and V4 - Year and average value. I delete the other columns to make a data frame more simple. 
+- Co2 is expressed as a mole fraction  in dry air, micromol/mol (parts per million - ppm). 
+```{r}
+co2Nasa <- co2Nasa[-c(2,3,5,6,7)] #delete 
+colnames(co2Nasa) <- c("Year","ppm")
+head(co2Nasa)
+```
+-99.99 = data is missing.  
+
+- Next I choose to delete missing values instead of doing any interpolations since data seems to grow steadily.
+```{r}
+missing <- c(co2Nasa$ppm == -99.99) #missing indexes
+co2Nasa <- co2Nasa[!missing,] #include only non-missing values
+head(co2Nasa)
+```
+- Missing values deleted.
+
+#####Long Term Trend: CO2 (ppm) + CO2(kt)
+```{r}
+
+co2Nasa$Year <- as.integer(co2Nasa$Year)
+co2Nasa$ppm <- as.double(co2Nasa$ppm)
+
+gasplotNasa <- ggplot(co2Nasa, aes(x=Year, y=ppm)) + geom_point(color="darkgreen")
+
+par(mfrow=c(2,1))
+
+gasplotNasa   
+gasplot
+
+```
+- The both plots(ppm, kt) have an upward trend. 
+- The total amount of co2 and emissions caused by human have been increasing. 
+
+
+#####Percentual changes between 1960 and 2010 in Co2 data
+```{r}
+ppm1 <- mean(co2Nasa$ppm[co2Nasa$Year==1960])
+ppm2 <- mean(mean(co2Nasa$ppm[co2Nasa$Year==2010]))
+
+ppm2/ppm1
+
+
+```
+
+```{r}
+co21960 <- gasemi$co2[gasemi$Year==1960]
+co22010 <- gasemi$co2[gasemi$Year==2010]
+
+co22010/co21960
+```
+- Total amount of Carbon emissions (by human) has increased +3.5 times
+- Total amount of CO2 has increased 23%
+
+
+
+Temperature Data
+======================
+
+- I found a trustworthy temperature data sets from Berkeley Earth. 
+
+#####Berkeley Earth provides global Average, Minimum and Maximum temperatures. 
+```{r}
+#TAVG summary, TMAX summary, TMIN summary, BerkeleyEarth, Land-Surface Temperature
+TAVGSum <- read.table("http://berkeleyearth.lbl.gov/auto/Global/Complete_TAVG_summary.txt", comment.char = "%")
+TMINSum <- read.table("http://berkeleyearth.lbl.gov/auto/Global/Complete_TMIN_summary.txt", comment.char = "%")
+TMAXSum <- read.table("http://berkeleyearth.lbl.gov/auto/Global/Complete_TMAX_summary.txt",comment.char = "%")
+
+TAVGSum <- TAVGSum[-c(4,5)] #delete unnecesssary columns
+TMINSum <- TMINSum[-c(4,5)]
+TMAXSum <- TMAXSum[-c(4,5)]
+
+
+#Change column names
+colnames(TAVGSum) <- c("Year","Mean","Unc") #Unc=Uncertainty
+colnames(TMINSum) <- c("Year","Mean","Unc")
+colnames(TMAXSum) <- c("Year","Mean","Unc")
+```
+
+
+#####Long Term Trend: Temperatures(Avg, Min, Max)
+```{r}
+
+tempPlotSum <- ggplot(data=TAVGSum, aes(x=TAVGSum$Year, y=TAVGSum$Mean), title="Temperature")+ geom_smooth(color="lightgreen") + xlim(1850, 2020) + ylim(-1.0, 2.0)
+tempPlotSum2 <-tempPlotSum + geom_smooth(data=TMINSum, aes(x=TMINSum$Year, y=TMINSum$Mean), color="pink") + geom_smooth(data=TMINSum, aes(x=TMAXSum$Year, y=TMAXSum$Mean), color="lightblue") + xlab("Year") + ylab("Mean Temperature, reference level: 1951-1980 avg temp")
+
+tempPlotSum2
+
+
+```
+- Temperatures (Average, Min and Max) have an upward trend as emissions too. 
+
+####NOTE: 
+- IPCC reported that average temperature will reach +1.5C level between 2032 and 2050. 
+- This can be also seen from graph (above) if temperature keeps growing linearly. 
+
+#####Long Term Trend in Uncertainties of measurements
+```{r}
+
+unctemp <- ggplot(TAVGSum, aes(x=Year,y=Unc)) + geom_point(color="blue") + geom_smooth(color="orange") + ylab("Uncertainty of Average Temperature Measurement")
+
+unctemp
+```
+- Uncertainties have a downward trend -> data should be more reliable closer to present. 
+
+
+
+####What next?
+- More data cleaning and organizing
+- Adding a new column "TempAvg" (average temperature) to "gasemi" from 1960 to newest observation 
+```{r}
+tempAvg <- TAVGSum$Mean[TAVGSum$Year>=1960]
+```
+
+#####"gasemi" starts with year 2018 and tempAvg with 1960. Reverse tempAvg data with rev().
+```{r}
+tempAvg18to60 <- rev(tempAvg)
+gasemi$TempAvg <- tempAvg18to60
+head(gasemi)
+```
+
+#####Next I'll do the same sequence of actions and add a new column "ppm" to "gasemi"
+```{r}
+presentYear <- gasemi$Year[1] #to make sure columns length are same. 
+co2from1960 <- co2Nasa[(co2Nasa$Year>=1960 & co2Nasa$Year<=presentYear),] #1960-2018
+co2from1960 <- aggregate(co2from1960[,2],list(co2from1960$Year), mean) #calculate means by year
+colnames(co2from1960) <- c("Year","ppm") #rename columns
+
+ppm <- rev(co2from1960$ppm)
+gasemi$ppm <- ppm #add a new column ppm
+
+head(gasemi)
+
+```
+- ppm added succesfully. There's a lot of NAs - missing values. 
+
+#####NCreate another data frame without missing values
+```{r}
+gasemiNoNA <- na.omit(gasemi)
+head(gasemiNoNA)
+```
+- Missing values deleted
+- Deleted data may cause prediction error in modelling
+
+
+Looking at the Data and Building Models
+=======================
+- Find insights from the data. 
+- For modelling I will mainly use linear models with different flexibilities since the main task is to point out long term trends.
+
+#####pairs() function gives a great overview of the data and feature correlations. 
+```{r}
+pairs(gasemiNoNA)
+```
+- There are strong linear correlations within the features (columns of "gasemi"). Of course I cannot draw any causality based on correlations. 
+
+#####Numerical representation gives also a good sence of correlations between the features.
+```{r}
+cor(gasemiNoNA)
+```
+- All the gasses are highly correlated with TempAvg - Average Temperature. 
+- Average correlation is >80%
+
+####I have shown that there is an upward trend in both temperature and gas emissions. There's also strong correlations between those features. Co2 also forms the majority of emissions (66% - at year 2010)
+
+
+Modelling
+============================
+- I will use model selection methods to see which gasses are the best predictors for Temperature. 
+- Approaches: Best Subset Selection, Forward and Backward stepwise selection
+- Why: There are just few features so these selection methods will work ok, especially Best subset selection. 
+
+###Best Subset Selection
+```{r}
+#install.packages("leaps")
+library(leaps)
+regfit.TempAvg <- regsubsets(TempAvg~co2+meth+nitoxi+other,data=gasemiNoNA)
+summary(regfit.TempAvg)
+```
+####CO2 is the most significant single gas to predict Average Temperature based on Best Subset selection
+
+###Forward Stepwise Selection
+```{r}
+regfit.TempAvg <- regsubsets(TempAvg~co2+meth+nitoxi+other,data=gasemiNoNA,method = "forward")
+summary(regfit.TempAvg)
+```
+
+###Backward Stepwise Selection
+```{r}
+regfit.TempAvg <- regsubsets(TempAvg~co2+meth+nitoxi+other,data=gasemiNoNA,method="backward")
+summary(regfit.TempAvg)
+```
+- All three: Best Subset selection, Forward and Backward Stepwise Selection give the same models for different model sizes. 
+- Co2 is always chosen first if model should have only one predicting feature. 
+
+
+The main task was to point out the importance of carbon dioxide correlation to temperature.
+Let's try linear regression next. My response variable Y is TempAvg and Predictors are different gasses. 
+```{r}
+fitCarbon <- lm(TempAvg~co2, data=gasemiNoNA)
+summary(fitCarbon)
+fitNitoxi <- lm(TempAvg~nitoxi,data=gasemiNoNA)
+summary(fitNitoxi)
+fitMeth <- lm(TempAvg~meth, data=gasemiNoNA)
+summary(fitMeth)
+fitOther <- lm(TempAvg~other, data=gasemiNoNA)
+summary(fitOther)
+```
+
+####p-values
+  Carbon: 1.14e-13
+
+  Nitrous Dioxide: 3.18e-09
+
+  Methane: 1.44e-12
+
+  Other gasses: 8.24e-07
+
+####R Squared:
+  Carbon: 74%
+
+  Nitrous Dioxide: 58%
+
+  Methane: 71%
+
+  Other gasses: 45%
+  
+  
+###Interpretation
+- All the gasses has a low p-value. 
+- It means that features are statistically significant in order to predict the  Average Temperature. 
+- Their coefficients are positive which means that there are positive correlation between response and predictor. 
+- Nevertheless Carbon Dioxide has the lowest p-value and highest R-Squared =  proportion of variance explained. 
+  
+#####An interesting result is that Best Model Selection (model size = 2) selects "Other" with Co2 instead of "Methane" which is the second best single gas predictor. There's certainly some interaction between the data features. 
+
+
+###Visual Representations of Models with regression line
+######Positive correlation can be seen visually as well. 
+```{r}
+par(mfrow=c(2,2))
+plot(TempAvg~co2,gasemiNoNA, xlab="Carbon Dioxide")
+abline(fitCarbon,col=2)
+plot(TempAvg~meth,gasemiNoNA, xlab="Methane")
+abline(fitMeth,col=3)
+plot(TempAvg~nitoxi,gasemiNoNA, xlab="Nitrous Dioxide")
+abline(fitNitoxi,col=4)
+plot(TempAvg~other,gasemiNoNA, xlab="Other gasses")
+abline(fitOther,col=6)
+
+```
+
+
+####Adding non-linearity to the models
+- Next I will add flexibility to the models by adding higher degrees into the prediction formula. 
+
+
+######The formula will be Y=B0 + B1 * X + B1 * X^2 +...+ B1 * X^n, where B is coefficient, X is a predictor and n is a degree. 
+
+#####TempAvg~Co2 with degrees 1 to 10 and corresponding RSE (Residual Standard Error). 
+```{r}
+errors <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TempAvg~poly(co2,i), data=gasemiNoNA)
+  errors[i] = summary(fitPoly)[6] #set RSE
+}
+
+plot(1:10,errors, xlab="Flexibility",ylab="RSE",type="b")
+minError <- which.min(errors)
+
+```
+- Model with a degree 3 has the lowest RSE. 
+
+
+
+####Regression line fitting visually (from 1 to 6 degrees)
+```{r}
+par(mfrow=c(2,3))
+for(i in 1:6) {
+  plot(TempAvg~co2,gasemiNoNA)
+  fitPoly <- lm(TempAvg~poly(co2,i), data=gasemiNoNA)
+  lines(gasemiNoNA$co2,fitted(fitPoly),col=i+1,type="b")
+}
+
+```
+- The higher the degree is the more it's fitting. Maybe even overfitting..
+
+
+Let's see what happens to a determination of variance explained.
+
+#####I'm using Adjusted R squared since it makes different model sizes more comparable. 
+```{r}
+adjR2 <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TempAvg~poly(co2,i), data=gasemiNoNA)
+  adjR2[i] <- summary(fitPoly)$adj.r.squared
+}
+adjR2
+
+plot(1:10,adjR2,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
+
+```
+- Model with degree 3 has a highest Adjusted R Squared and the lowest RSE. 
+
+
+
+```{r}
+errorsMeth <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TempAvg~poly(meth,i), data=gasemiNoNA)
+  errorsMeth[i] = summary(fitPoly)[6] #set RSE
+}
+
+plot(1:10,errorsMeth, xlab="Flexibility",ylab="RSE",type="b")
+```
+
+
+```{r}
+errorsNitoxi <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TempAvg~poly(nitoxi,i), data=gasemiNoNA)
+  errorsNitoxi[i] = summary(fitPoly)[6] #set RSE
+}
+
+plot(1:10,errorsNitoxi, xlab="Flexibility",ylab="RSE",type="b")
+```
+- Methane and Nitrous Dioxide has the lowest RSE when model degree is 3. This gives a little bit of idea what could be a good model to make predictions. 
+
+
+
+```{r}
+adjR2Meth <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TempAvg~poly(meth,i), data=gasemiNoNA)
+  adjR2Meth[i] <- summary(fitPoly)$adj.r.squared
+}
+adjR2Meth
+
+plot(1:10,adjR2Meth,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
+```
+
+```{r}
+adjR2Nitoxi <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TempAvg~poly(nitoxi,i), data=gasemiNoNA)
+  adjR2Nitoxi[i] <- summary(fitPoly)$adj.r.squared
+}
+adjR2
+
+plot(1:10,adjR2Nitoxi,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
+```
+
+
+#####Adjusted R squared with all the gasses in the model. 
+```{r}
+adjR2FULL <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TempAvg~poly(co2+meth+nitoxi+other,i), data=gasemiNoNA)
+  adjR2FULL[i] <- summary(fitPoly)$adj.r.squared
+}
+adjR2
+
+plot(1:10,adjR2FULL,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
+```
+
+#####RSE with all the gasses in the model. 
+```{r}
+errorsFULL <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TempAvg~poly(co2+meth+nitoxi+other,i), data=gasemiNoNA)
+  errorsFULL[i] = summary(fitPoly)[6] #set RSE
+}
+
+plot(1:10,errorsFULL, xlab="Flexibility",ylab="RSE",type="b")
+```
+
+####NOTES:
+- All gasses separately and together have the highest Adjusted R squared when degree of the model is 3
+- All gasses separately and together have the lowest RSE when degree of the model is 3. 
+- Based on test data the models seem to work best when the model degree is 3. 
+- For predictions model with degree 3 might be the best choise. 
+- Model 3 might be overfitting!!
+
+##Validating the data
+
+- Since the data set is so small I won't use cross validation or k-fold approaches. 
+- Intead I will use Validation set approach: Split the data set in two halves (randomly): train and test data.
+- Gives a better information how models with different degrees are performing.
+```{r}
+set.seed(1)
+train <- sample(seq(43),20,replace = FALSE)
+cat("Training data index(randomly chosen): ",train)
+
+regfit.full <- regsubsets(TempAvg~co2+meth+nitoxi+other,data=gasemiNoNA[train,])
+summary(regfit.full)
+
+
+```
+
+####Model degree = 1
+```{r}
+val.errors=rep(NA,4)
+val.errors
+
+x.test <- model.matrix(TempAvg~co2+meth+nitoxi+other,data=gasemiNoNA[-train,])
+#we are going to do predictions on each model
+for(i in 1:4) {
+  coefi <- coef(regfit.full, id=i) #get coefficients of the model size = i
+  pred <- x.test[,names(coefi)]%*%coefi #predictions
+  val.errors[i] <- mean((gasemiNoNA$TempAvg[-train]-pred)^2) #save the error
+}
+
+plot(sqrt(val.errors),ylab="Root MSE", ylim=c(0,1),pch=19,type="b")
+points(sqrt(regfit.full$rss[-1]/20),col="blue",pch=19,type="b")
+legend("topright",legend=c("Training","Validation"),col=c("blue","black"),pch=19)
+
+```
+
+###Notes:
+- Training and Test data error seem to follow each other quite well. 
+- This might be a sign that degree 3 is overfitting and actually a simpler model performs better! 
+- Note to self: The data set is small -> hard to make strong predictions 
+
+
+#####Model Degree = 3
+```{r}
+set.seed(2)
+train <- sample(seq(43),20,replace = FALSE)
+train
+
+regfit.full <- regsubsets(TempAvg~poly((co2+meth+nitoxi+other),3),data=gasemiNoNA[train,])
+summary(regfit.full)
+
+```
+
+
+
+```{r}
+val.errors=rep(NA,3)
+val.errors
+
+x.test <- model.matrix(TempAvg~poly((co2+meth+nitoxi+other),3),data=gasemiNoNA[-train,])
+#we are going to do predictions on each model
+for(i in 1:3) {
+  coefi <- coef(regfit.full, id=i) #get coefficients of the model size = i
+  pred <- x.test[,names(coefi)]%*%coefi #predictions
+  val.errors[i] <- mean((gasemiNoNA$TempAvg[-train]-pred)^2) #save the error
+}
+
+plot(sqrt(val.errors),ylab="Root MSE", ylim=c(0,1),pch=19,type="b")
+points(sqrt(regfit.full$rss[-1]/20),col="blue",pch=19,type="b")
+legend("topright",legend=c("Training","Validation"),col=c("blue","black"),pch=19)
+
+```
+####NOTES: 
+- Prediction error with model 3 (degree=3) differs more from the model 1 (degree=1)
+- The data set is so small that it's hard to make strong statements. 
+- I think this is a sign that model with higher degrees are overfitting the data. 
+
+
+
+###Prediction: CO2
+- Model degrees from 1 to 4
+```{r}
+d <- seq(2010, 2060, length.out = 200) #generated predictor data
+par(new=T)
+for(degree in 1:4) {
+  fm <- lm(co2 ~ poly(Year, degree), data = gasemiNoNA)
+  pred <- predict(fm,newdata=data.frame(Year=d))
+  plot(co2~Year,gasemiNoNA, xlim=c(1960,2060),ylim=c(1.5e+07,5.0e+07), main=as.character(degree))
+  lines(gasemiNoNA$Year,fitted(fm),col=degree+1)
+  lines(d, pred, col = 1, lty="dashed")
+  legend("topleft", legend=c("Regression", "Prediction"), col=c((degree+1),1), lty=1:2)
+}
+
+
+```
+###NOTES
+- It seems that Co2 will continue growing if all other driving factors remains the same.
+- Based on RSE and AdjR2 with degree 3 performed the best but based on validation approach model with degree 1 performed better. 
+- Model 3 looks alarming!! 
+- Based on the RSE and Adjusted R2 model 3 should be fitting the data well but it might be overfitting. 
+
+
+
+
+#####Prediction: Average Temperature
+```{r}
+d <- seq(2010, 2060, length.out = 200)
+par(new=T)
+for(degree in 1:4) {
+  fm <- lm(TempAvg ~ poly(Year, degree), data = gasemiNoNA)
+  pred <- predict(fm,newdata=data.frame(Year=d))
+  plot(TempAvg~Year,gasemiNoNA, xlim=c(1960,2060),ylim=c(-0.2,2), main= as.character(degree))
+  abline(h=1.5,lty=3,col="red")
+  ?abline
+  ?plot
+  lines(gasemiNoNA$Year,fitted(fm),col=degree+1)
+  lines(d, pred, col = 1,lty="dashed")
+  legend("topleft", legend=c("Regression", "Prediction","1.5 level"), col=c((degree+1),1,"red"), lty=1:3)
+}
+
+```
+###Notes:
+- Based on data and models there are few options for the future of Average Temperatures.
+- Model with degree 3 performed best in validation. Now the model with degree 3 suggests that Average Temperature will start falling closer to the 1951-1980 reference level. 
+
+####IMPORTANT NOTE: 
+- Now the model 3 has a strong conflict with the IPCC reference. 
+- IPCC suggested that if current conditions continue, average temperature would cross the 1.5 Celcius level. 
+- From 1.5C perspective the simple linear model with degree 1 or 2 are closer to IPCC prediction. 
+- AGAIN: Model 3 seem to overfit the data! 
+
+
+#####Relationship and interaction of CO2 and Average Temperature
+```{r}
+d <- seq(3.5e+07,5.0e+07, length.out = 200)
+par(mfrow=c(2,3))
+
+for(i in 1:6) {
+  plot(TempAvg~co2,gasemiNoNA, xlim=c(1.5e+07,5.0e+07), ylim=c(-0.2,2), main=as.character(i))
+  fitPoly <- lm(TempAvg~poly(co2,i), data=gasemiNoNA)
+  lines(gasemiNoNA$co2,fitted(fitPoly),col=i+1,type="b")
+  pred <- predict(fitPoly,newdata=data.frame(co2=d))
+  lines(d,pred,col=1,lty="dashed")
+}
+
+```
+- The model 1 seem to less radical than others. I believe it will be the most trustworthy and other models are overfitting. 
+
+
+##Results:
+- I decided to use linear models since the task was to give a picture of the long term trend in emissions, temperature and describe a relationship of GDP and Emissions. 
+- It is clear that Average Temperature's and Emissions by human have increased in a long term. 
+- It seems that Emissions and Temperature are positively correlated. So are Global GDP and Total Emissions. 
+- Predictions into account historical data. Different models tries to find non-linearities but the most linear ones seem to perform best. 
+- Smallest models seem to give a realistic prediction if referencing IPCC report.
+- Since the data used in this work has low dimensions, uncertainty of the shown predictions are high. 
+- I think the models give a good picture of long time trends but future predictions are not quite accurate. If I should choose which models are the best I think that based on validation error the simple one-degree linear regression is the best if all the factors remains the same. 
+
+
+####What the models and estimates don't take into account:
+- Models don't include features which could be driving factors of global warming: for example aggriculture or population growth etc. 
+- Data is mostly time-series data. Here I'm not looking if the data is stationary or non-stationary or if the data has any seasonal trends. Nevertheless the models gives a  picture of long time trends. 
+- Placements of the measurement stations. 
+- Measurement stations are usually situated on rural areas. Later in the history cities have grown and environment around the  stations have changed which could have caused higher or lower average temperatures closer to the stations. These kind of things are not taken into account in modelling.
+
+
+
+
+
+
+
+
+
+
+
+
+GDP vs. Total Emissions
+=======
+
+#####Now I will create another data frame which includes GDP and Total Emissions
+```{r}
+gdpEmi <- data.frame(
+  Year = last:first,
+  GDP = gdp$Value,
+  TotalEmissions = total$Total
+)
+gdpEmiNoNa <- na.omit(gdpEmi)
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(GDP~Year,gdpEmiNoNa, col="blue")
+plot(TotalEmissions~Year,gdpEmiNoNa, col="orange")
+```
+- Both GDP and Total seem to correlate and grow linearly. 
+
+
+####Relationship of GDP and Total Emissions
+```{r}
+gdpplot <- ggplot(gdpEmiNoNa,aes(x=GDP, y=TotalEmissions)) + geom_point(color="purple")
+gdpplot
+```
+- Total Emissions seem to grow when GDP grows. 
+- Correlation: highly linear. 
+
+
+#####Mean GDP: 1970-91 vs. 1992-2012
+```{r}
+par(mfrow=c(1,2))
+gdpEmiNoNa1 <- gdpEmiNoNa
+gdpEmiNoNa1$Group <- 1
+gdpEmiNoNa1$Group[n] <- 2
+boxgdp <- boxplot(GDP~Group, data=gdpEmiNoNa1, col="orange", names=c("1970-91","1992-2012"), main="GDP mean")
+
+boxTotEmi <- boxplot(TotalEmissions~Group, data=gdpEmiNoNa1, col="orange", names=c("1970-91","1992-2012"), main="Total Emissions mean")
+```
+###Notes
+- The mean of GDP and Total Emissions have risen during last 40-50 years. 
+
+
+
+#####Fitting a regression line onto data. 
+```{r}
+par(mfrow=c(2,3))
+for(i in 1:6) {
+  plot(TotalEmissions~GDP,gdpEmiNoNa, main=as.character(i))
+  fitPoly <- lm(TotalEmissions~poly(GDP,i), data=gdpEmiNoNa)
+  lines(gdpEmiNoNa$GDP,fitted(fitPoly),col=i+1,type="b")
+}
+```
+- There's not much data so strong statements cannot be made. 
+- All the models seem to have a similar fitted curve.
+- It looks like the model starts to overfit too when the model degree is >=4
+- Model with degree 1 seem to be a bit too linear. 
+- Based on the visualizations the model with degree 2 or 3 seem to be the best. 
+
+
+
+
+
+###RSE and Adjusted R squared of Total Emissions ~ GDP
+
+```{r}
+adjR2GDP <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TotalEmissions~poly(GDP,i), data=gdpEmiNoNa)
+  adjR2GDP[i] <- summary(fitPoly)$adj.r.squared
+}
+adjR2
+
+plot(1:10,adjR2GDP,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
+```
+
+
+
+```{r}
+errorsGDP <- c()
+for(i in 1:10) {
+  fitPoly <- lm(TotalEmissions~poly(GDP,i), data=gdpEmiNoNa)
+  errorsGDP[i] = summary(fitPoly)[6] #set RSE
+}
+
+plot(1:10,errorsGDP, xlab="Flexibility",ylab="RSE",type="b")
+```
+- Model with a degree 5 seem to have a highest Adjusted R squared but it might be overfitting as well as the gas models with degree 3. 
+
+
+
+####Predictions: Total Emissions~GDP
+```{r}
+d <- seq(6.0e+13,10e+13, length.out = 200)
+#par(mfrow=c(2,3))
+par(new=T)
+for(i in 1:6) {
+  plot(TotalEmissions~GDP,gdpEmiNoNa, xlim=c(0,10e+13), ylim=c(2.5e+07,10e+07), main=as.character(i))
+  fitPoly <- lm(TotalEmissions~poly(GDP,i), data=gdpEmiNoNa)
+  lines(gdpEmiNoNa$GDP,fitted(fitPoly),col=i+1,type="b")
+  pred <- predict(fitPoly,newdata=data.frame(GDP=d),confint=0.95)
+  lines(d,pred,col=1,lty="dashed")
+}
+```
+###Notes: 
+- Model with a degree 5 seem to produce the smallest RSE and the highest Adjusted R squared, we should take a closer look to the model 5. 
+- Model 5 seem to be overfitting the data because the curve is not following trend at all.  
+- I think the best model is based on model's with degrees 1 to 3 since predictions are not behaving so radically. 
+- Confidence interval is higher for smaller models. 
+
+
+#####P values and Adjusted R squared
+```{r}
+for(i in 1:5) {
+  fitPoly <- lm(TotalEmissions~poly(GDP,i), data=gdpEmiNoNa)
+  print(summary(fitPoly))
+}
+```
+####p-values
+- Based on p-values GDP's and Total Emissions's relationship seem to be highly correlated
+
+
+####Results Total Emissions ~ GDP: 
+- The relationship is strongly correlated. 
+- It seems that GDP is predicting Total Emissions well. 
+- The confidence interval for smaller models are high but larger models seem to overfit. 
+- Since there's already uncertainties in the starting data the confidence interval are not so high. 
+- Adj. R Squared's are really high >90%. 
+- I believe the simplest models are the most realistic and they also avoid overfitting.  
+- Total Emissions will continue growing if GDP grows. 
+
+
+API
+=====
+Key elements:
+
+- Access: is the user allowed to get data through api. 
+- Request: Did the Api actually asked for data. 
+- Methods with parameters and response.
+
+####A few example methods: 
+- getModel(list(predictor),response) 
+
+>returns a plot with predictors on the X-axis and response on the Y-axis
+
+- getPrediction(model,list(predictor),response, start, end)
+
+>return plot with a prediction on certain period
+
+- getData(Country, Indicator, startYear, endYear) 
+
+> for example get co2 data based on country and time period.  
+
+- cacheList() 
+
+> returns the list of indicators, countries etc. 
+
+- updates() 
+
+> returns the list of latest updates of data. 
+
+- API returns data in JSON format
+
+Backend
+=====
+- Extracting data from different sources
+- Data Cleaning and organizing: creating suitable data frames, handling missing and duplicated values
+- Feature Selection
+- Evaluating prediction error -> model selection
+- Modelling and predictions
+
+FrontEnd
+========
+- FrontEnd pulls the data from the backend. 
+- Visualizations and analyzing insights.
+- FrontEnd gives a possibility to reframe time windows and select different models on selected data. 
+
+###Automated Data Pipeline
+#####How to get models updated when new data is added?
+- REST API can download data monthly into one platform. 
+- New data is stored into database. 
+- Models run new data againt existing predictions and checks if prediction errors get better. 
+- If the prediction accuracy rises the new data will be used in the model
+- Trained models are saved and but sometimes need to be fully trained again depending on the model. 
+
+
+
+#####Thanks! Hope You made It Here! 
+
