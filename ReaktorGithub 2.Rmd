@@ -2,7 +2,9 @@
 title: "Reaktor: Summer Job Application by OJ"
 author: "Olli 'OJ' Jokinen"
 date: "Feb/2019"
-output: rmarkdown::github_document
+output: 
+  html_document:
+    keep_md: true
 ---
 
 ![On my way to scoring a summer job at Reaktor!](https://www.databusiness.fi/content/uploads/2017/06/22-380x380.png)
