@@ -1,5 +1,5 @@
 # Data-Science project of Global Warming
-- The task was to do modelling and predictions based on global warming data. 
+- The main objective was to do modelling, predictions and visualizations based on global warming data. 
 
 
 # Brief (in Finnish) 
