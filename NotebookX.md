@@ -505,7 +505,7 @@ lbls <- paste(lbls, "%",sep="") #add % to labels
 pie(as.integer(slices), lbls, col= c("lightblue","pink","lightgreen","grey"),main="Pie Chart of Emissions(%), Year 2010")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 -   Carbon Dioxide emissions forms the greatest (66%) part of emissions in 2010.
 
@@ -520,7 +520,7 @@ gasplot
 
     ## Warning: Removed 4 rows containing missing values (geom_point).
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-14-1.png) - There certainly is an upward trend in co2 emissions.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-14-1.png) - There certainly is an upward trend in co2 emissions.
 
 ##### Long Term Trend: Co2 + CH4 + N20 + Other
 
@@ -545,7 +545,7 @@ gasplot2
 
     ## Warning: Removed 16 rows containing missing values (geom_point).
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 -   The growth of Carbon Dioxide emissions is the steepest
 -   The amount of CO2 emissions are the highest.
@@ -618,7 +618,7 @@ par(mfrow=c(2,1))
 gasplotNasa   
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-19-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-19-1.png)
 
 ``` r
 gasplot
@@ -628,7 +628,7 @@ gasplot
 
     ## Warning: Removed 4 rows containing missing values (geom_point).
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-19-2.png) - The both plots(ppm, kt) have an upward trend. - The total amount of co2 and emissions caused by human have been increasing.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-19-2.png) - The both plots(ppm, kt) have an upward trend. - The total amount of co2 and emissions caused by human have been increasing.
 
 ##### Percentual changes between 1960 and 2010 in Co2 data
 
@@ -700,7 +700,7 @@ tempPlotSum2
 
     ## Warning: Removed 2 rows containing non-finite values (stat_smooth).
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-23-1.png) - Temperatures (Average, Min and Max) have an upward trend as emissions too.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-23-1.png) - Temperatures (Average, Min and Max) have an upward trend as emissions too.
 
 #### NOTE:
 
@@ -720,7 +720,7 @@ unctemp
 
     ## Warning: Removed 2 rows containing missing values (geom_point).
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-24-1.png) - Uncertainties have a downward trend -&gt; data should be more reliable closer to present.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-24-1.png) - Uncertainties have a downward trend -&gt; data should be more reliable closer to present.
 
 #### What next?
 
@@ -801,7 +801,7 @@ Looking at the Data and Building Models
 pairs(gasemiNoNA)
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-29-1.png) - There are strong linear correlations within the features. Of course correlation doesn't mean causality.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-29-1.png) - There are strong linear correlations within the features. Of course correlation doesn't mean causality.
 
 ##### Numerical representation gives also a good sence of correlations between the features.
 
@@ -1063,7 +1063,7 @@ plot(TempAvg~other,gasemiNoNA, xlab="Other gasses")
 abline(fitOther,col=6)
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-35-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-35-1.png)
 
 #### Adding non-linearity to the models
 
@@ -1083,7 +1083,7 @@ for(i in 1:10) {
 plot(1:10,errors, xlab="Flexibility",ylab="RSE",type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-36-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-36-1.png)
 
 ``` r
 minError <- which.min(errors)
@@ -1105,7 +1105,7 @@ for(i in 1:6) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-37-1.png) - The higher the degree is the more it's fitting. Maybe even overfitting..
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-37-1.png) - The higher the degree is the more it's fitting. Maybe even overfitting..
 
 Let's see what happens to a proportion of variance explained.
 
@@ -1127,7 +1127,7 @@ adjR2
 plot(1:10,adjR2,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-38-1.png) - Model with degree 3 has a highest Adjusted R Squared and the lowest RSE.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-38-1.png) - Model with degree 3 has a highest Adjusted R Squared and the lowest RSE.
 
 ``` r
 errorsMeth <- c()
@@ -1139,7 +1139,7 @@ for(i in 1:10) {
 plot(1:10,errorsMeth, xlab="Flexibility",ylab="RSE",type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-39-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-39-1.png)
 
 ``` r
 errorsNitoxi <- c()
@@ -1151,7 +1151,7 @@ for(i in 1:10) {
 plot(1:10,errorsNitoxi, xlab="Flexibility",ylab="RSE",type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-40-1.png) - Methane and Nitrous Dioxide has the lowest RSE when model degree is 3. This gives a little bit of idea what could be a good model to make predictions.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-40-1.png) - Methane and Nitrous Dioxide has the lowest RSE when model degree is 3. This gives a little bit of idea what could be a good model to make predictions.
 
 ``` r
 adjR2Meth <- c()
@@ -1169,7 +1169,7 @@ adjR2Meth
 plot(1:10,adjR2Meth,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-41-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-41-1.png)
 
 ``` r
 adjR2Nitoxi <- c()
@@ -1187,7 +1187,7 @@ adjR2
 plot(1:10,adjR2Nitoxi,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-42-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-42-1.png)
 
 ##### Adjusted R squared with all the gasses in the model.
 
@@ -1207,7 +1207,7 @@ adjR2
 plot(1:10,adjR2FULL,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-43-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-43-1.png)
 
 ##### RSE with all the gasses in the model.
 
@@ -1221,7 +1221,7 @@ for(i in 1:10) {
 plot(1:10,errorsFULL, xlab="Flexibility",ylab="RSE",type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-44-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-44-1.png)
 
 #### NOTES:
 
@@ -1292,7 +1292,7 @@ points(sqrt(regfit.full$rss[-1]/20),col="blue",pch=19,type="b")
 legend("topright",legend=c("Training","Validation"),col=c("blue","black"),pch=19)
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-46-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-46-1.png)
 
 ### Notes:
 
@@ -1359,7 +1359,7 @@ points(sqrt(regfit.full$rss[-1]/20),col="blue",pch=19,type="b")
 legend("topright",legend=c("Training","Validation"),col=c("blue","black"),pch=19)
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-48-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-48-1.png)
 
 #### NOTES:
 
@@ -1389,7 +1389,7 @@ for(degree in 1:4) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-4.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-49-1.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-49-2.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-49-3.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-49-4.png)
 
 ### NOTES
 
@@ -1421,7 +1421,7 @@ for(degree in 1:4) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-4.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-50-1.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-50-2.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-50-3.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-50-4.png)
 
 ### Notes:
 
@@ -1450,7 +1450,7 @@ for(i in 1:6) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-51-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-51-1.png)
 
 -   The model 1 seem to less radical than others. I believe it will be the most trustworthy and other models are overfitting.
 
@@ -1493,7 +1493,7 @@ plot(GDP~Year,gdpEmiNoNa, col="blue")
 plot(TotalEmissions~Year,gdpEmiNoNa, col="orange")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-53-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-53-1.png)
 
 -   Both GDP and Total seem to correlate and grow linearly.
 
@@ -1504,7 +1504,7 @@ gdpplot <- ggplot(gdpEmiNoNa,aes(x=GDP, y=TotalEmissions)) + geom_point(color="p
 gdpplot
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-54-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-54-1.png)
 
 -   Total Emissions seem to grow when GDP grows.
 -   Correlation: highly linear.
@@ -1522,7 +1522,7 @@ boxgdp <- boxplot(GDP~Group, data=gdpEmiNoNa1, col="orange", names=c("1970-91","
 boxTotEmi <- boxplot(TotalEmissions~Group, data=gdpEmiNoNa1, col="orange", names=c("1970-91","1992-2012"), main="Total Emissions mean")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-55-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-55-1.png)
 
 ### Notes
 
@@ -1539,7 +1539,7 @@ for(i in 1:6) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-56-1.png) - There's not much data so strong statements cannot be made. - All the models seem to have a similar fitted curve. - It looks like the model starts to overfit too when the model degree is &gt;=4 - Model with degree 1 seem to be a bit too linear. - Based on the visualizations the model with degree 2 or 3 seem to be the best.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-56-1.png) - There's not much data so strong statements cannot be made. - All the models seem to have a similar fitted curve. - It looks like the model starts to overfit too when the model degree is &gt;=4 - Model with degree 1 seem to be a bit too linear. - Based on the visualizations the model with degree 2 or 3 seem to be the best.
 
 ### RSE and Adjusted R squared of Total Emissions ~ GDP
 
@@ -1559,7 +1559,7 @@ adjR2
 plot(1:10,adjR2GDP,xlab="Number of Degrees",ylab="Adjusted R Squared", type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-57-1.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-57-1.png)
 
 ``` r
 errorsGDP <- c()
@@ -1571,7 +1571,7 @@ for(i in 1:10) {
 plot(1:10,errorsGDP, xlab="Flexibility",ylab="RSE",type="b")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-58-1.png) - Model with a degree 5 seem to have a highest Adjusted R squared but it might be overfitting as well as the gas models with degree 3.
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-58-1.png) - Model with a degree 5 seem to have a highest Adjusted R squared but it might be overfitting as well as the gas models with degree 3.
 
 #### Predictions: Total Emissions~GDP
 
@@ -1592,7 +1592,7 @@ for(i in 1:6) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-4.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-5.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-6.png)
+![](NotebookX_files/figure-markdown_github/unnamed-chunk-59-1.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-59-2.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-59-3.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-59-4.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-59-5.png)![](NotebookX_files/figure-markdown_github/unnamed-chunk-59-6.png)
 
 ### Notes:
 
