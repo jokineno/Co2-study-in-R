@@ -16,12 +16,13 @@ TASKS 1,3,4,5
 -   Are there any interaction or correlation between these factors?
 -   How do the future looks like of temperature and gas emissions?
 -   What is the relationship of GDP and Total Emissions like?
--   What are is the sketch of Interface like?
+-   What are is the sketch of the Interface like?
 -   What the models do and don't take into account?
+-   How reliable are predictions?
 
 #### References
 
--   IPCC report showed that "Climate-related risks for natural and human systems are higher for global warming of 1.5Celcius than at present, but lower than at 2Celcius (high confidence)."
+-   IPCC report showed that "Climate-related risks for natural and human systems are higher for global warming of 1.5 Celcius than at present, but lower than at 2 Celcius (high confidence)."
 -   The global goal is to reduce emissions 45% before 2030 and carbon frootprint should be negative after 2050
 
 ###### Data sources used in the project: World Bank (R's API package), Berkeley Earth (Web) and NASA (Web).
@@ -421,7 +422,7 @@ first <- co2$Year[nrow(co2)] #Year 1960
 ##### Create a data frame
 
 ``` r
-gasemi <- data.frame(
+gasemi <- data.frame( #gasemi = gas and emissions
   Year = last:first,
   co2 = co2$Co2,
   meth = meth$CH4,
@@ -442,7 +443,7 @@ head(gasemi)
 
 -   All good.
 
-##### Add one more column "Other" gasses.
+##### Add one more column: "other" = Total - co2 - ch4 - n2o
 
 ``` r
 gasemi$other <- gasemi$Total-gasemi$nitoxi-gasemi$meth - gasemi$co2
@@ -465,9 +466,9 @@ colnames(gasemi)
 
     ## [1] "Year"   "co2"    "meth"   "nitoxi" "Total"  "other"
 
--   Based on IPCC report: 2010 is the reference level for the future climate change goals.
+### Year 2010
 
-##### Year 2010 emission levels.
+-   Based on IPCC report: 2010 emission level is the reference level for the future actions.
 
 ``` r
 gasses2010 <- gasemi[gasemi$Year==2010,]
@@ -504,7 +505,9 @@ lbls <- paste(lbls, "%",sep="") #add % to labels
 pie(as.integer(slices), lbls, col= c("lightblue","pink","lightgreen","grey"),main="Pie Chart of Emissions(%), Year 2010")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-13-1.png) - Carbon Dioxide emissions forms the greatest (66%) part of emissions in 2010.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-13-1.png)
+
+-   Carbon Dioxide emissions forms the greatest (66%) part of emissions in 2010.
 
 ##### Long Term Trend: Co2
 
@@ -565,11 +568,11 @@ head(co2Nasa)
     ## 5 1958  7 1958.542 315.86 315.86 314.98 -1
     ## 6 1958  8 1958.625 314.93 314.93 315.94 -1
 
--   I need only columns V1 and V4 - Year and average value. I delete the other columns to make a data frame more simple.
--   Co2 is expressed as a mole fraction in dry air, micromol/mol (parts per million - ppm).
+-   I need only columns V1 and V4 - "Year" and "Average Value". I delete other columns to make a data frame cleaner.
+-   Co2 is expressed as a mole fraction in dry air, micromol/mol (parts per million - ppm): Total Amount of Co2 in the atmosphere.
 
 ``` r
-co2Nasa <- co2Nasa[-c(2,3,5,6,7)] #delete 
+co2Nasa <- co2Nasa[-c(2,3,5,6,7)] #delete  extra columns
 colnames(co2Nasa) <- c("Year","ppm")
 head(co2Nasa)
 ```
@@ -582,9 +585,9 @@ head(co2Nasa)
     ## 5 1958 315.86
     ## 6 1958 314.93
 
--99.99 = data is missing.
+-   99.99 = data is missing.
 
--   Next I choose to delete missing values instead of doing any interpolations since data seems to grow steadily.
+##### Next I choose to delete missing values instead of doing any interpolations since data seems to grow steadily.
 
 ``` r
 missing <- c(co2Nasa$ppm == -99.99) #missing indexes
@@ -639,8 +642,8 @@ ppm2/ppm1
     ## [1] 1.230325
 
 ``` r
-co21960 <- gasemi$co2[gasemi$Year==1960]
-co22010 <- gasemi$co2[gasemi$Year==2010]
+co21960 <- gasemi$co2[gasemi$Year==1960] #co2 at 1960
+co22010 <- gasemi$co2[gasemi$Year==2010] #co2 at 2010
 
 co22010/co21960
 ```
@@ -653,7 +656,7 @@ co22010/co21960
 Temperature Data
 ================
 
--   I found a trustworthy temperature data sets from Berkeley Earth.
+-   Trustworthy temperature data sets from Berkeley Earth.
 
 ##### Berkeley Earth provides global Average, Minimum and Maximum temperatures.
 
@@ -663,7 +666,8 @@ TAVGSum <- read.table("http://berkeleyearth.lbl.gov/auto/Global/Complete_TAVG_su
 TMINSum <- read.table("http://berkeleyearth.lbl.gov/auto/Global/Complete_TMIN_summary.txt", comment.char = "%")
 TMAXSum <- read.table("http://berkeleyearth.lbl.gov/auto/Global/Complete_TMAX_summary.txt",comment.char = "%")
 
-TAVGSum <- TAVGSum[-c(4,5)] #delete unnecesssary columns
+#delete unnecesssary columns
+TAVGSum <- TAVGSum[-c(4,5)] 
 TMINSum <- TMINSum[-c(4,5)]
 TMAXSum <- TMAXSum[-c(4,5)]
 
@@ -677,6 +681,7 @@ colnames(TMAXSum) <- c("Year","Mean","Unc")
 ##### Long Term Trend: Temperatures(Avg, Min, Max)
 
 ``` r
+#Temperature Plot Summary
 tempPlotSum <- ggplot(data=TAVGSum, aes(x=TAVGSum$Year, y=TAVGSum$Mean), title="Temperature")+ geom_smooth(color="lightgreen") + xlim(1850, 2020) + ylim(-1.0, 2.0)
 tempPlotSum2 <-tempPlotSum + geom_smooth(data=TMINSum, aes(x=TMINSum$Year, y=TMINSum$Mean), color="pink") + geom_smooth(data=TMINSum, aes(x=TMAXSum$Year, y=TMAXSum$Mean), color="lightblue") + xlab("Year") + ylab("Mean Temperature, reference level: 1951-1980 avg temp")
 
@@ -700,13 +705,12 @@ tempPlotSum2
 #### NOTE:
 
 -   IPCC reported that average temperature will reach +1.5C level between 2032 and 2050.
--   This can be also seen from graph (above) if temperature keeps growing linearly.
+-   This future will be reached if temperature keeps growing linearly.
 
 ##### Long Term Trend in Uncertainties of measurements
 
 ``` r
 unctemp <- ggplot(TAVGSum, aes(x=Year,y=Unc)) + geom_point(color="blue") + geom_smooth(color="orange") + ylab("Uncertainty of Average Temperature Measurement")
-
 unctemp
 ```
 
@@ -765,12 +769,12 @@ head(gasemi)
     ## 5 2014 36138285   NA     NA    NA    NA   0.941 398.6475
     ## 6 2013 35837591   NA     NA    NA    NA   0.992 396.5208
 
--   ppm added succesfully. There's a lot of NAs - missing values.
+-   ppm added succesfully. There are missing values.
 
-##### NCreate another data frame without missing values
+##### Create another data frame without missing values
 
 ``` r
-gasemiNoNA <- na.omit(gasemi)
+gasemiNoNA <- na.omit(gasemi) #rows without missing values
 head(gasemiNoNA)
 ```
 
@@ -789,7 +793,7 @@ Looking at the Data and Building Models
 =======================================
 
 -   Find insights from the data.
--   For modelling I will mainly use linear models with different flexibilities since the main task is to point out long term trends.
+-   For modelling I will mainly use linear models with different flexibilities to point out long term trends and predictions.
 
 ##### pairs() function gives a great overview of the data and feature correlations.
 
@@ -797,7 +801,7 @@ Looking at the Data and Building Models
 pairs(gasemiNoNA)
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-29-1.png) - There are strong linear correlations within the features (columns of "gasemi"). Of course I cannot draw any causality based on correlations.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-29-1.png) - There are strong linear correlations within the features. Of course correlation doesn't mean causality.
 
 ##### Numerical representation gives also a good sence of correlations between the features.
 
@@ -825,9 +829,11 @@ cor(gasemiNoNA)
     ## ppm     0.8936482 1.0000000
 
 -   All the gasses are highly correlated with TempAvg - Average Temperature.
--   Average correlation is &gt;80%
+-   Average correlation between gasses and Average Temperature is more than 80%
 
 #### I have shown that there is an upward trend in both temperature and gas emissions. There's also strong correlations between those features. Co2 also forms the majority of emissions (66% - at year 2010)
+
+-   Next I will do modelling and find out what kind of models performs best in fitting the data and performing predictions.
 
 Modelling
 =========
@@ -911,10 +917,10 @@ summary(regfit.TempAvg)
     ## 3  ( 1 ) "*" "*"  " "    "*"  
     ## 4  ( 1 ) "*" "*"  "*"    "*"
 
--   All three: Best Subset selection, Forward and Backward Stepwise Selection give the same models for different model sizes.
--   Co2 is always chosen first if model should have only one predicting feature.
+-   All three model (Best Subset selection, Forward and Backward Stepwise Selection) give the same models for different model sizes.
+-   Co2 is always chosen for model size 1.
 
-The main task was to point out the importance of carbon dioxide correlation to temperature. Let's try linear regression next. My response variable Y is TempAvg and Predictors are different gasses.
+The main task was to point out the importance of carbon dioxide correlation to temperature. Let's try linear regression next. My response variable Y is TempAvg and predictors are different gasses.
 
 ``` r
 fitCarbon <- lm(TempAvg~co2, data=gasemiNoNA)
@@ -1035,15 +1041,15 @@ Other gasses: 45%
 ### Interpretation
 
 -   All the gasses has a low p-value.
--   It means that features are statistically significant in order to predict the Average Temperature.
+-   Features are statistically significant in order to predict the Average Temperature.
 -   Their coefficients are positive which means that there are positive correlation between response and predictor.
 -   Nevertheless Carbon Dioxide has the lowest p-value and highest R-Squared = proportion of variance explained.
 
 ##### An interesting result is that Best Model Selection (model size = 2) selects "Other" with Co2 instead of "Methane" which is the second best single gas predictor. There's certainly some interaction between the data features.
 
-### Visual Representations of Models with regression line
+### Visual Representations of Models with a regression line
 
-###### Positive correlation can be seen visually as well.
+###### A positive correlation can be seen visually as well.
 
 ``` r
 par(mfrow=c(2,2))
@@ -1063,7 +1069,7 @@ abline(fitOther,col=6)
 
 -   Next I will add flexibility to the models by adding higher degrees into the prediction formula.
 
-###### The formula will be Y=B0 + B1 \* X + B1 \* X^2 +...+ B1 \* X^n, where B is coefficient, X is a predictor and n is a degree.
+###### The formula will be Y=B0 + B1 \* X + B2 \* X^2 +...+ Bn \* X^n, where B is coefficient, X is a predictor and n is a degree.
 
 ##### TempAvg~Co2 with degrees 1 to 10 and corresponding RSE (Residual Standard Error).
 
@@ -1081,11 +1087,14 @@ plot(1:10,errors, xlab="Flexibility",ylab="RSE",type="b")
 
 ``` r
 minError <- which.min(errors)
+minError
 ```
+
+    ## [1] 3
 
 -   Model with a degree 3 has the lowest RSE.
 
-#### Regression line fitting visually (from 1 to 6 degrees)
+#### Regression lines visually (from 1 to 6 degrees)
 
 ``` r
 par(mfrow=c(2,3))
@@ -1098,7 +1107,7 @@ for(i in 1:6) {
 
 ![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-37-1.png) - The higher the degree is the more it's fitting. Maybe even overfitting..
 
-Let's see what happens to a determination of variance explained.
+Let's see what happens to a proportion of variance explained.
 
 ##### I'm using Adjusted R squared since it makes different model sizes more comparable.
 
@@ -1220,18 +1229,17 @@ plot(1:10,errorsFULL, xlab="Flexibility",ylab="RSE",type="b")
 -   All gasses separately and together have the lowest RSE when degree of the model is 3.
 -   Based on test data the models seem to work best when the model degree is 3.
 -   For predictions model with degree 3 might be the best choise.
--   Model 3 might be overfitting!!
+-   Important: Model 3 might be overfitting!!
 
 Validating the data
 -------------------
 
 -   Since the data set is so small I won't use cross validation or k-fold approaches.
--   Intead I will use Validation set approach: Split the data set in two halves (randomly): train and test data.
--   Gives a better information how models with different degrees are performing.
+-   Intead I will use Validation set approach: Split the data set in two halves (randomly): train and test data, and test what kind of RSEs models with different degrees produces.
 
 ``` r
 set.seed(1)
-train <- sample(seq(43),20,replace = FALSE)
+train <- sample(seq(43),20,replace = FALSE) #train data is 20 samples
 cat("Training data index(randomly chosen): ",train)
 ```
 
@@ -1259,10 +1267,12 @@ summary(regfit.full)
     ## 3  ( 1 ) "*" "*"  " "    "*"  
     ## 4  ( 1 ) "*" "*"  "*"    "*"
 
+-   Similar models selected again.
+
 #### Model degree = 1
 
 ``` r
-val.errors=rep(NA,4)
+val.errors=rep(NA,4) #validating errors
 val.errors
 ```
 
@@ -1270,7 +1280,7 @@ val.errors
 
 ``` r
 x.test <- model.matrix(TempAvg~co2+meth+nitoxi+other,data=gasemiNoNA[-train,])
-#we are going to do predictions on each model
+#predictions on each model
 for(i in 1:4) {
   coefi <- coef(regfit.full, id=i) #get coefficients of the model size = i
   pred <- x.test[,names(coefi)]%*%coefi #predictions
@@ -1337,7 +1347,7 @@ val.errors
 
 ``` r
 x.test <- model.matrix(TempAvg~poly((co2+meth+nitoxi+other),3),data=gasemiNoNA[-train,])
-#we are going to do predictions on each model
+#predictions on each model
 for(i in 1:3) {
   coefi <- coef(regfit.full, id=i) #get coefficients of the model size = i
   pred <- x.test[,names(coefi)]%*%coefi #predictions
@@ -1349,14 +1359,20 @@ points(sqrt(regfit.full$rss[-1]/20),col="blue",pch=19,type="b")
 legend("topright",legend=c("Training","Validation"),col=c("blue","black"),pch=19)
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-48-1.png) \#\#\#\#NOTES: - Prediction error with model 3 (degree=3) differs more from the model 1 (degree=1) - The data set is so small that it's hard to make strong statements. - I think this is a sign that model with higher degrees are overfitting the data.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-48-1.png)
 
-### Prediction: CO2
+#### NOTES:
+
+-   Prediction error with model 3 (degree=3) differs more from the model 1 (degree=1)
+-   I think this is a sign that model with higher degrees are overfitting the data.
+-   The data set is so small that it's hard to make strong statements.
+
+### Predictions: CO2
 
 -   Model degrees from 1 to 4
 
 ``` r
-d <- seq(2010, 2060, length.out = 200) #generated predictor data
+d <- seq(2010, 2060, length.out = 200) #predictor data for 2010-2016
 par(new=T)
 ```
 
@@ -1373,9 +1389,16 @@ for(degree in 1:4) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-4.png) \#\#\#NOTES - It seems that Co2 will continue growing if all other driving factors remains the same. - Based on RSE and AdjR2 with degree 3 performed the best but based on validation approach model with degree 1 performed better. - Model 3 looks alarming!! - Based on the RSE and Adjusted R2 model 3 should be fitting the data well but it might be overfitting.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-49-4.png)
 
-##### Prediction: Average Temperature
+### NOTES
+
+-   It seems that Co2 will continue growing if all other driving factors remains the same.
+-   Based on RSE and AdjR2 with degree 3 performed the best but based on validation approach model with degree 1 performed better.
+-   Model 3 looks alarming.
+-   Based on the RSE and Adjusted R2 model 3 should be fitting the data well but it might be overfitting.
+
+### Predictions: Average Temperature
 
 ``` r
 d <- seq(2010, 2060, length.out = 200)
@@ -1398,14 +1421,19 @@ for(degree in 1:4) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-4.png) \#\#\#Notes: - Based on data and models there are few options for the future of Average Temperatures. - Model with degree 3 performed best in validation. Now the model with degree 3 suggests that Average Temperature will start falling closer to the 1951-1980 reference level.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-50-4.png)
+
+### Notes:
+
+-   Models gives really different predictions.
+-   Model with degree 1 performed best in validation. Model 1 suggests linear growth of Average Temperatures and the 1.5 C level will be crossed by Year ~2030
+-   Model with degree 3 suggests that Average Temperature will start falling closer to the 1951-1980 reference level.
 
 #### IMPORTANT NOTE:
 
 -   Now the model 3 has a strong conflict with the IPCC reference.
--   IPCC suggested that if current conditions continue, average temperature would cross the 1.5 Celcius level.
+-   IPCC suggested that if current conditions continue, average temperature would cross the 1.5 Celcius level between 2032 and 2050
 -   From 1.5C perspective the simple linear model with degree 1 or 2 are closer to IPCC prediction.
--   AGAIN: Model 3 seem to overfit the data!
 
 ##### Relationship and interaction of CO2 and Average Temperature
 
@@ -1414,7 +1442,7 @@ d <- seq(3.5e+07,5.0e+07, length.out = 200)
 par(mfrow=c(2,3))
 
 for(i in 1:6) {
-  plot(TempAvg~co2,gasemiNoNA, xlim=c(1.5e+07,5.0e+07), ylim=c(-0.2,2), main=as.character(i))
+  plot(TempAvg~co2,gasemiNoNA, xlim=c(1.5e+07,5.0e+07), ylim=c(-0.2,2), main=as.character(i), xlab="Carbon Dioxide",ylab="Average Temperature, 1951-1980 reference")
   fitPoly <- lm(TempAvg~poly(co2,i), data=gasemiNoNA)
   lines(gasemiNoNA$co2,fitted(fitPoly),col=i+1,type="b")
   pred <- predict(fitPoly,newdata=data.frame(co2=d))
@@ -1422,25 +1450,28 @@ for(i in 1:6) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-51-1.png) - The model 1 seem to less radical than others. I believe it will be the most trustworthy and other models are overfitting.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-51-1.png)
+
+-   The model 1 seem to less radical than others. I believe it will be the most trustworthy and other models are overfitting.
 
 Results:
 --------
 
--   I decided to use linear models since the task was to give a picture of the long term trend in emissions, temperature and describe a relationship of GDP and Emissions.
+-   I decided to use linear models since the task was to give a picture of the long term trend in emissions, temperature.
 -   It is clear that Average Temperature's and Emissions by human have increased in a long term.
--   It seems that Emissions and Temperature are positively correlated. So are Global GDP and Total Emissions.
--   Predictions into account historical data. Different models tries to find non-linearities but the most linear ones seem to perform best.
--   Smallest models seem to give a realistic prediction if referencing IPCC report.
--   Since the data used in this work has low dimensions, uncertainty of the shown predictions are high.
--   I think the models give a good picture of long time trends but future predictions are not quite accurate. If I should choose which models are the best I think that based on validation error the simple one-degree linear regression is the best if all the factors remains the same.
+-   It seems that Emissions and Temperature are positively correlated.
+-   Predictions take into account historical data.
+-   Different models tries to find non-linearities but the most linear ones seem to perform best.
+-   Since the data used in this project has low dimensions, uncertainty of the shown predictions are high.
+-   I think the models give a good picture of long time trends but future predictions are not quite accurate. If I should choose which models are the best I think that based on validation error and IPCC refereneces the simple one-degree linear regression is the best model if all the factors remains the same.
 
 #### What the models and estimates don't take into account:
 
+-   Models takes data but it doensn't take into account how the data is gathered. I trust to my sources.
 -   Models don't include features which could be driving factors of global warming: for example aggriculture or population growth etc.
 -   Data is mostly time-series data. Here I'm not looking if the data is stationary or non-stationary or if the data has any seasonal trends. Nevertheless the models gives a picture of long time trends.
 -   Placements of the measurement stations.
--   Measurement stations are usually situated on rural areas. Later in the history cities have grown and environment around the stations have changed which could have caused higher or lower average temperatures closer to the stations. These kind of things are not taken into account in modelling.
+-   Measurement stations are usually situated on rural areas. Later in the history cities have grown and environment around the stations have changed which could have caused higher or lower average temperatures at stations. These kind of things are not taken into account in modelling.
 
 GDP vs. Total Emissions
 =======================
@@ -1462,7 +1493,9 @@ plot(GDP~Year,gdpEmiNoNa, col="blue")
 plot(TotalEmissions~Year,gdpEmiNoNa, col="orange")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-53-1.png) - Both GDP and Total seem to correlate and grow linearly.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-53-1.png)
+
+-   Both GDP and Total seem to correlate and grow linearly.
 
 #### Relationship of GDP and Total Emissions
 
@@ -1471,7 +1504,10 @@ gdpplot <- ggplot(gdpEmiNoNa,aes(x=GDP, y=TotalEmissions)) + geom_point(color="p
 gdpplot
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-54-1.png) - Total Emissions seem to grow when GDP grows. - Correlation: highly linear.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-54-1.png)
+
+-   Total Emissions seem to grow when GDP grows.
+-   Correlation: highly linear.
 
 ##### Mean GDP: 1970-91 vs. 1992-2012
 
@@ -1486,7 +1522,11 @@ boxgdp <- boxplot(GDP~Group, data=gdpEmiNoNa1, col="orange", names=c("1970-91","
 boxTotEmi <- boxplot(TotalEmissions~Group, data=gdpEmiNoNa1, col="orange", names=c("1970-91","1992-2012"), main="Total Emissions mean")
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-55-1.png) \#\#\#Notes - The mean of GDP and Total Emissions have risen during last 40-50 years.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-55-1.png)
+
+### Notes
+
+-   The mean of GDP and Total Emissions have risen during last 40-50 years.
 
 ##### Fitting a regression line onto data.
 
@@ -1537,7 +1577,6 @@ plot(1:10,errorsGDP, xlab="Flexibility",ylab="RSE",type="b")
 
 ``` r
 d <- seq(6.0e+13,10e+13, length.out = 200)
-#par(mfrow=c(2,3))
 par(new=T)
 ```
 
@@ -1553,8 +1592,14 @@ for(i in 1:6) {
 }
 ```
 
-![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-4.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-5.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-6.png) \#\#\#Notes: - Model with a degree 5 seem to produce the smallest RSE and the highest Adjusted R squared, we should take a closer look to the model 5. - Model 5 seem to be overfitting the data because the curve is not following trend at all.
-- I think the best model is based on model's with degrees 1 to 3 since predictions are not behaving so radically. - Confidence interval is higher for smaller models.
+![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-1.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-2.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-3.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-4.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-5.png)![](ReaktorGithub_2_files/figure-markdown_github/unnamed-chunk-59-6.png)
+
+### Notes:
+
+-   Model with a degree 5 seem to produce the smallest RSE and the highest Adjusted R squared, we should take a closer look to the model 5.
+-   Model 5 seem to be overfitting the data because the curve is not following trend at all.
+-   I think the best model is based on model's with degrees 1 to 3 since predictions are not behaving so radically.
+-   Confidence interval is higher for smaller models.
 
 ##### P values and Adjusted R squared
 
@@ -1678,11 +1723,12 @@ for(i in 1:5) {
 
 -   The relationship is strongly correlated.
 -   It seems that GDP is predicting Total Emissions well.
--   The confidence interval for smaller models are high but larger models seem to overfit.
--   Since there's already uncertainties in the starting data the confidence interval are not so high.
--   Adj. R Squared's are really high &gt;90%.
+-   The confidence interval for smaller models are high (95%)
+-   Larger models seem to overfit.
+-   Adj. R Squareds are really high &gt;90%.
 -   I believe the simplest models are the most realistic and they also avoid overfitting.
 -   Total Emissions will continue growing if GDP grows.
+-   The models are catching the long term trend but they are quite ambiguous so the prediction accuracy is not the best possible.
 
 API
 ===
@@ -1695,11 +1741,11 @@ Key elements:
 
 #### A few example methods:
 
--   getModel(list(predictor),response)
+-   getModel(list(predictors),response)
 
 > returns a plot with predictors on the X-axis and response on the Y-axis
 
--   getPrediction(model,list(predictor),response, start, end)
+-   getPrediction(model\_id,list(predictor),response, start, end)
 
 > return plot with a prediction on certain period
 
@@ -1739,7 +1785,7 @@ FrontEnd
 
 -   REST API can download data monthly into one platform.
 -   New data is stored into database.
--   Models run new data againt existing predictions and checks if prediction errors get better.
+-   Models run new data againt existing predictions and checks if prediction errors get lower.
 -   If the prediction accuracy rises the new data will be used in the model
 -   Trained models are saved and but sometimes need to be fully trained again depending on the model.
 
