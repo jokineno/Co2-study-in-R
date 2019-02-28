@@ -2,7 +2,7 @@
 title: "Reaktor: Summer Job Application by OJ"
 author: "Olli 'OJ' Jokinen"
 date: "Feb/2019"
-output: rmarkdown::github_document
+output: github_document
 ---
 
 ![On my way to scoring a summer job at Reaktor!](https://www.databusiness.fi/content/uploads/2017/06/22-380x380.png)
@@ -812,6 +812,7 @@ gdpplot
 #####Mean GDP: 1970-91 vs. 1992-2012
 ```{r}
 par(mfrow=c(1,2))
+n <- 1:(nrow(gdpEmiNoNa)/2)
 gdpEmiNoNa1 <- gdpEmiNoNa
 gdpEmiNoNa1$Group <- 1
 gdpEmiNoNa1$Group[n] <- 2
