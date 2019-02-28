@@ -1,8 +1,10 @@
 # Data-Science project of Global Warming
-- The task was to do modelling and predictions based on global warming data. 
+- The main objective was to do modelling, predictions and visualizations based on global warming data. 
 
 
-###Brief (in Finnish) 
+# Brief (in Finnish) 
+- Below you can find a given brief. 
+
 Ilmastonmuutos ja hiilidioksidipäästöt ovat ihmiskunnan suurimpia haasteita. Maailman populaation kasvaessa ja elintason noustessa myös päästöt lisääntyvät. IPCC:n julkaiseman raportin mukaan tarvitaan nopeita ja laaja-alaisia muutoksia. Hiilidioksidipäästöjä tulisi tiputtaa vuoteen 2030 mennessä noin 45 prosenttia vuoden 2010 tasosta. Vuoteen 2050 mennessä planeetan koko väestön hiilijalanjäljen tulisi olla neutraali ja pian tämän jälkeen selvästi negatiivinen.
 
 Asiakas on tilannut meiltä sovelluksen, jonka avulla käyttäjät ymmärtävät paremmin ilmastonmuutosta. Tehtävänäsi on osana sovelluksen design-prosessia mallintaa hiilidioksidipäästöjä ja maapallon lämpenemistä.
@@ -33,6 +35,7 @@ Ohjeita tehtävän tekemiseen
 
 Tehtävän ratkaisun on tarkoitus olla näyte data science- ja data engineering -taidoistasi, ei siis vain tehtävänannon täyttämistä. Keskity ratkaisussasi osiin, joissa taitosi pääsevät mielestäsi oikeuksiinsa. Tehtävänanto on laaja ja ajoittain epämääräinen kuten usein reaalielämässäkin, ja oikeassa asiakasprojektissa kommunikoisimme intensiivisesti ja jatkuvasti asiakkaan kanssa. Tässä tehtävässä se ei ole mahdollista, joten saat vapauden tehdä valintoja luottaen omaan tulkintaasi tehtävänannosta.
 Toteuta tehtävänannon kohdista 1–3 siis vähintään yksi, ja lisäksi kohdan 4 mukainen ennuste valitsemallesi kohtien 1–3 tehtävälle sekä kohdan 5 mukainen hahmotelma sovelluksen mallinnus- ja data-arkkitehtuurista. Kerro vastauksessasi myös, mitä mieltä olet ennusteesi laadusta. Mitä ennuste ja sen epävarmuusestimaatit ottavat ja eivät ota huomioon? Arvostamme ongelman, mallien, datan ja ratkaisun ymmärtämistä.
+
 Visualisoinnit voit raportoida meille esimerkiksi markdownina. Halutessasi voit toki toteuttaa myös interaktiivisen demon, esimerkiksi Shinylla. Kiinnitä ratkaisussasi huomiota koodin luettavuuteen ja sen jakamiseen järkeviin kokonaisuuksiin.
 Mikäli sinulla herää kysymyksiä tehtävästä, voit laittaa niitä meille osoitteeseen summerjob@reaktor.com
 Toimita kesätyötehtävän lähdekoodit ja visualisaatiot (md, pdf, jpg, …) meille linkkinä esimerkiksi GitHub- tai GitLab-repositorioon yhdessä hakemuksesi ja CV:si kanssa kesätyöpaikkailmoituksen alta löytyvän lomakkeen avulla. Huomioi, että lomake mahdollistaa vain yhden liitteen lähettämisen, joten paketoi kaikki tiedostosi yhdeksi PDF:ksi tai lähetä ne meille .zip-muodossa. 
